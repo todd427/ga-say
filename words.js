@@ -24,6 +24,8 @@ const WORDS = [
   { irish:"Ná bac leis",        eng:"Never mind / forget it",   phonetic:"naw bock lesh",            cat:"phrases" },
   { irish:"Cúpla focal",        eng:"A few words",              phonetic:"KOOH-plah FUK-ul",         cat:"phrases" },
   { irish:"Ár dteanga",         eng:"Our language",             phonetic:"awr DYAN-gah",             cat:"phrases" },
+  { irish:"anois",              eng:"now",                      phonetic:"uh-NISH",                  cat:"phrases" },
+  { irish:"anseo anois",        eng:"here and now",             phonetic:"AN-shuh uh-NISH",          cat:"phrases" },
 
   // Culture / language
   { irish:"scéal",              eng:"story / news",             phonetic:"shkyal",                   cat:"culture" },
@@ -45,6 +47,8 @@ const WORDS = [
   { irish:"snáithe",            eng:"thread",                   phonetic:"SNAW-heh",                 cat:"culture" },
   { irish:"comhrá",             eng:"conversation",             phonetic:"KOH-raw",                  cat:"culture" },
   { irish:"abair",              eng:"speak / say (command)",    phonetic:"AH-bir",                   cat:"culture" },
+  { irish:"fís",                eng:"vision / dream",           phonetic:"feesh",                    cat:"culture" },
+  { irish:"folláine",           eng:"wellbeing / health",       phonetic:"FUL-awn-yeh",              cat:"culture" },
 
   // Nature
   { irish:"loch",               eng:"lake",                     phonetic:"lokh",                     cat:"nature" },
@@ -67,10 +71,12 @@ const WORDS = [
   { irish:"a deich",            eng:"ten",                      phonetic:"ah djeh",                  cat:"numbers" },
 
   // FoxxeLabs / Irish-named projects
-  { irish:"anseo",              eng:"here / present — Anseo platform", phonetic:"an-SHUH",           cat:"projects" },
-  { irish:"sionnach",           eng:"fox — Sionnach WebGPU chat app",  phonetic:"SHUN-ukh",          cat:"projects" },
-  { irish:"comhrá",             eng:"conversation — multi-model chat UI concept", phonetic:"KOH-raw", cat:"projects" },
-  { irish:"abair",              eng:"speak/say — proposed TTS-first app name",    phonetic:"AH-bir",  cat:"projects" },
-  { irish:"snáithe",            eng:"thread — proposed chat app name", phonetic:"SNAW-heh",           cat:"projects" },
-  { irish:"mnemos",             eng:"memory (Greek root) — personal RAG system",  phonetic:"NEE-mos", cat:"projects" },
+  { irish:"anseo",              eng:"here / present — Anseo platform",            phonetic:"an-SHUH",     cat:"projects" },
+  { irish:"sionnach",           eng:"fox — Sionnach WebGPU chat app",             phonetic:"SHUN-ukh",    cat:"projects" },
+  { irish:"fís",                eng:"vision / dream — project name",              phonetic:"feesh",        cat:"projects" },
+  { irish:"folláine",           eng:"wellbeing — Anseo wellbeing module",         phonetic:"FUL-awn-yeh", cat:"projects" },
+  { irish:"comhrá",             eng:"conversation — multi-model chat UI concept", phonetic:"KOH-raw",     cat:"projects" },
+  { irish:"abair",              eng:"speak/say — proposed TTS-first app name",    phonetic:"AH-bir",      cat:"projects" },
+  { irish:"snáithe",            eng:"thread — proposed chat app name",            phonetic:"SNAW-heh",    cat:"projects" },
+  { irish:"mnemos",             eng:"memory (Greek root) — personal RAG system",  phonetic:"NEE-mos",     cat:"projects" },
 ];

@@ -71,12 +71,12 @@ const WORDS = [
   { irish:"a deich",            eng:"ten",                      phonetic:"ah djeh",                  cat:"numbers" },
 
   // FoxxeLabs / Irish-named projects
-  { irish:"anseo",              eng:"here / present — Anseo platform",            phonetic:"an-SHUH",     cat:"projects" },
-  { irish:"sionnach",           eng:"fox — Sionnach WebGPU chat app",             phonetic:"SHUN-ukh",    cat:"projects" },
-  { irish:"fís",                eng:"vision / dream — project name",              phonetic:"feesh",        cat:"projects" },
-  { irish:"folláine",           eng:"wellbeing — Anseo wellbeing module",         phonetic:"FUL-awn-yeh", cat:"projects" },
-  { irish:"comhrá",             eng:"conversation — multi-model chat UI concept", phonetic:"KOH-raw",     cat:"projects" },
-  { irish:"abair",              eng:"speak/say — proposed TTS-first app name",    phonetic:"AH-bir",      cat:"projects" },
-  { irish:"snáithe",            eng:"thread — proposed chat app name",            phonetic:"SNAW-heh",    cat:"projects" },
-  { irish:"mnemos",             eng:"memory (Greek root) — personal RAG system",  phonetic:"NEE-mos",     cat:"projects" },
+  { irish:"anseo",              eng:"here / present — Anseo platform",                phonetic:"an-SHUH",     cat:"projects" },
+  { irish:"sionnach",           eng:"fox — Sionnach WebGPU chat app",                 phonetic:"SHUN-ukh",    cat:"projects" },
+  { irish:"fís",                eng:"vision / dream — entrepreneur incubator project",phonetic:"feesh",       cat:"projects" },
+  { irish:"folláine",           eng:"wellbeing — Anseo wellbeing module",             phonetic:"FUL-awn-yeh", cat:"projects" },
+  { irish:"comhrá",             eng:"conversation — multi-model chat UI concept",     phonetic:"KOH-raw",     cat:"projects" },
+  { irish:"abair",              eng:"speak/say — proposed TTS-first app name",        phonetic:"AH-bir",      cat:"projects" },
+  { irish:"snáithe",            eng:"thread — proposed chat app name",                phonetic:"SNAW-heh",    cat:"projects" },
+  { irish:"mnemos",             eng:"memory (Greek root) — personal RAG system",      phonetic:"NEE-mos",     cat:"projects" },
 ];

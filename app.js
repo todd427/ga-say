@@ -5,6 +5,12 @@ let currentUtter = null;
 let activeCategory = 'all';
 let userWords = JSON.parse(localStorage.getItem('ga-say-words') || '[]');
 
+// Azure Speech state
+let azureToken = null;
+let azureRegion = null;
+let azureTokenExpiry = 0;
+let azureSynthesizer = null;
+
 const allWords = () => [...WORDS, ...userWords];
 
 // ── Theme ──────────────────────────────────────────────
@@ -19,7 +25,76 @@ function initTheme() {
   setTheme(saved);
 }
 
-// ── Voices ─────────────────────────────────────────────
+// ── Azure Token ────────────────────────────────────────
+async function getAzureToken() {
+  if (azureToken && Date.now() < azureTokenExpiry) return { token: azureToken, region: azureRegion };
+  try {
+    const resp = await fetch('/speech-token');
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (!data.token) return null;
+    azureToken = data.token;
+    azureRegion = data.region;
+    azureTokenExpiry = Date.now() + 9 * 60 * 1000; // 9 min (token lasts 10)
+    return { token: azureToken, region: azureRegion };
+  } catch {
+    return null;
+  }
+}
+
+// ── Azure TTS ──────────────────────────────────────────
+async function speakAzure(text, voiceName, btn, cardId) {
+  const auth = await getAzureToken();
+  if (!auth) return false;
+
+  // Lazy-load Azure Speech SDK from CDN
+  if (!window.SpeechSDK) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  const SDK = window.SpeechSDK;
+  const config = SDK.SpeechConfig.fromAuthorizationToken(auth.token, auth.region);
+  config.speechSynthesisVoiceName = voiceName;
+  config.speechSynthesisOutputFormat = SDK.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+
+  const player = new SDK.SpeakerAudioDestination();
+  const audioConfig = SDK.AudioConfig.fromSpeakerOutput(player);
+
+  // Stop any current synthesis
+  if (azureSynthesizer) {
+    try { azureSynthesizer.close(); } catch {}
+  }
+
+  const synthesizer = new SDK.SpeechSynthesizer(config, audioConfig);
+  azureSynthesizer = synthesizer;
+
+  return new Promise((resolve) => {
+    synthesizer.speakTextAsync(
+      text,
+      result => {
+        synthesizer.close();
+        azureSynthesizer = null;
+        resetSpeakButton(btn, cardId);
+        resolve(true);
+      },
+      err => {
+        console.warn('Azure TTS error:', err);
+        synthesizer.close();
+        azureSynthesizer = null;
+        resetSpeakButton(btn, cardId);
+        resolve(false);
+      }
+    );
+  });
+}
+
+// ── Web Speech fallback ────────────────────────────────
 function loadVoices() {
   voices = window.speechSynthesis.getVoices();
   if (!voices.length) return;
@@ -46,12 +121,85 @@ function loadVoices() {
   } else if (ieVoices.length) {
     sel.value = voices.indexOf(ieVoices[0]);
     badge.textContent = 'en-IE'; badge.className = 'badge ga';
-  } else if (gbVoices.length) {
-    sel.value = voices.indexOf(gbVoices[0]);
-    badge.textContent = 'en-GB'; badge.className = 'badge';
   } else {
-    badge.textContent = 'no Irish voice'; badge.className = 'badge';
+    badge.textContent = 'Web Speech fallback'; badge.className = 'badge';
   }
+}
+
+function speakWebSpeech(text, btn, cardId) {
+  if (currentUtter) { window.speechSynthesis.cancel(); }
+  const u = new SpeechSynthesisUtterance(text);
+  const vi = parseInt(document.getElementById('voice-sel').value);
+  if (!isNaN(vi) && voices[vi]) { u.voice = voices[vi]; u.lang = voices[vi].lang; }
+  else { u.lang = 'ga'; }
+  u.rate  = parseFloat(document.getElementById('rate-sl').value);
+  u.pitch = parseFloat(document.getElementById('pitch-sl').value);
+  u.onend = () => resetSpeakButton(btn, cardId);
+  currentUtter = u;
+  window.speechSynthesis.speak(u);
+}
+
+// ── Voice selector UI ──────────────────────────────────
+async function initVoiceSelector() {
+  const sel = document.getElementById('voice-sel');
+  const badge = document.getElementById('voice-badge');
+
+  // Try Azure first
+  const auth = await getAzureToken();
+  if (auth) {
+    sel.innerHTML = `
+      <option value="ga-IE-OrlaNeural">Orla — Irish Female (Azure)</option>
+      <option value="ga-IE-ColmNeural">Colm — Irish Male (Azure)</option>
+    `;
+    badge.textContent = 'Azure Neural Irish'; badge.className = 'badge ga';
+    // Hide rate/pitch controls — Azure ignores them via this path
+    document.querySelector('.ctrl-row:has(#rate-sl)').style.opacity = '0.4';
+    document.querySelector('.ctrl-row:has(#pitch-sl)').style.opacity = '0.4';
+    return;
+  }
+
+  // Fallback to Web Speech
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+  setTimeout(loadVoices, 500);
+}
+
+// ── Speak dispatcher ───────────────────────────────────
+async function speak(idx, btn, word) {
+  // Reset all UI
+  document.querySelectorAll('.word-card').forEach(c => c.classList.remove('speaking'));
+  document.querySelectorAll('.btn-speak').forEach(b => {
+    b.classList.remove('active');
+    b.innerHTML = icon() + ' Speak';
+  });
+
+  btn.classList.add('active');
+  btn.innerHTML = icon() + ' Speaking…';
+  document.getElementById('card-' + idx)?.classList.add('speaking');
+
+  const sel = document.getElementById('voice-sel');
+  const voiceVal = sel.value;
+  const isAzureVoice = voiceVal.includes('Neural');
+
+  if (isAzureVoice) {
+    const ok = await speakAzure(word.irish, voiceVal, btn, idx);
+    if (!ok) {
+      // Azure failed — fall back to Web Speech
+      speakWebSpeech(word.irish, btn, idx);
+    }
+  } else {
+    speakWebSpeech(word.irish, btn, idx);
+  }
+}
+
+function resetSpeakButton(btn, cardId) {
+  btn.classList.remove('active');
+  btn.innerHTML = icon() + ' Speak';
+  document.getElementById('card-' + cardId)?.classList.remove('speaking');
+}
+
+function icon() {
+  return `<svg width="12" height="12" viewBox="0 0 16 16"><polygon points="3,2 13,8 3,14" fill="currentColor"/></svg>`;
 }
 
 // ── Categories ─────────────────────────────────────────
@@ -80,47 +228,15 @@ function renderGrid() {
     const card = document.createElement('div');
     card.className = 'word-card';
     card.id = 'card-' + i;
-    const icon = `<svg width="12" height="12" viewBox="0 0 16 16"><polygon points="3,2 13,8 3,14" fill="currentColor"/></svg>`;
     card.innerHTML = `
       <div class="irish-word">${w.irish}</div>
       <div class="english">${w.eng}</div>
       <div class="phonetic">${w.phonetic}</div>
       <button class="btn-speak" onclick="speak(${i}, this, ${JSON.stringify(w).replace(/"/g, '&quot;')})">
-        ${icon} Speak
+        ${icon()} Speak
       </button>`;
     grid.appendChild(card);
   });
-}
-
-// ── Speech ─────────────────────────────────────────────
-function speak(idx, btn, word) {
-  if (currentUtter) { window.speechSynthesis.cancel(); }
-
-  document.querySelectorAll('.word-card').forEach(c => c.classList.remove('speaking'));
-  document.querySelectorAll('.btn-speak').forEach(b => {
-    b.classList.remove('active');
-    b.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16"><polygon points="3,2 13,8 3,14" fill="currentColor"/></svg> Speak`;
-  });
-
-  const u = new SpeechSynthesisUtterance(word.irish);
-  const vi = parseInt(document.getElementById('voice-sel').value);
-  if (!isNaN(vi) && voices[vi]) { u.voice = voices[vi]; u.lang = voices[vi].lang; }
-  else { u.lang = 'ga'; }
-  u.rate  = parseFloat(document.getElementById('rate-sl').value);
-  u.pitch = parseFloat(document.getElementById('pitch-sl').value);
-
-  u.onend = () => {
-    btn.classList.remove('active');
-    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16"><polygon points="3,2 13,8 3,14" fill="currentColor"/></svg> Speak`;
-    document.getElementById('card-' + idx)?.classList.remove('speaking');
-  };
-
-  btn.classList.add('active');
-  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16"><polygon points="3,2 13,8 3,14" fill="currentColor"/></svg> Speaking…`;
-  document.getElementById('card-' + idx)?.classList.add('speaking');
-
-  currentUtter = u;
-  window.speechSynthesis.speak(u);
 }
 
 // ── Add Word ───────────────────────────────────────────
@@ -151,6 +267,4 @@ document.getElementById('pitch-sl').addEventListener('input', e => {
 initTheme();
 buildCategoryTabs();
 renderGrid();
-window.speechSynthesis.onvoiceschanged = loadVoices;
-loadVoices();
-setTimeout(loadVoices, 500);
+initVoiceSelector();

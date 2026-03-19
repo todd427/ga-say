@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ga-say — Irish Pronunciation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="parchment">
+
+<header class="topbar">
+  <div class="logo">ga-say<span class="logo-sub">fuaimniú na Gaeilge</span></div>
+  <div class="topbar-controls">
+    <div class="theme-switcher">
+      <label>theme</label>
+      <select class="theme-sel" id="theme-sel" onchange="setTheme(this.value)">
+        <option value="parchment">Parchment</option>
+        <option value="folio">Folio</option>
+        <option value="obsidian">Obsidian</option>
+        <option value="studio">Studio</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="voice-controls card">
+    <div class="ctrl-row">
+      <span class="ctrl-label">Voice</span>
+      <select id="voice-sel" class="voice-sel"><option>Loading…</option></select>
+      <span class="badge" id="voice-badge">detecting…</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Rate</span>
+      <input type="range" min="0.5" max="1.5" step="0.05" value="0.75" id="rate-sl">
+      <span class="ctrl-val" id="rate-out">0.75</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Pitch</span>
+      <input type="range" min="0.5" max="2.0" step="0.1" value="1.0" id="pitch-sl">
+      <span class="ctrl-val" id="pitch-out">1.0</span>
+    </div>
+  </section>
+
+  <nav class="cat-tabs" id="cat-tabs"></nav>
+
+  <div class="word-grid" id="word-grid"></div>
+
+  <section class="add-section card">
+    <p class="add-title">Add a word</p>
+    <div class="add-fields">
+      <div class="field-group">
+        <label>Irish</label>
+        <input id="in-word" placeholder="e.g. grá" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label>English</label>
+        <input id="in-eng" placeholder="e.g. love">
+      </div>
+      <div class="field-group">
+        <label>Phonetic</label>
+        <input id="in-phon" placeholder="e.g. graw">
+      </div>
+      <div class="field-group">
+        <label>Category</label>
+        <input id="in-cat" placeholder="e.g. greetings">
+      </div>
+      <button class="add-btn" onclick="addWord()">+ Add</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <span>ga-say.sionnach.ie</span>
+  <span>·</span>
+  <span>a <a href="https://sionnach.ie">Sionnach</a> tool by <a href="https://foxxelabs.ie">FoxxeLabs</a></span>
+</footer>
+
+<script src="words.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

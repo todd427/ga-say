@@ -7,11 +7,13 @@
 export async function onRequest(context) {
   const { env, request } = context;
 
-  // CORS — allow ga-say subdomains and local dev
   const origin = request.headers.get('Origin') || '';
   const allowed = [
     'https://ga-say.sionnach.ie',
     'https://gaeltacht.sionnach.ie',
+    'https://foghlaim.sionnach.ie',
+    'https://foxxelabs.ie',
+    'https://www.foxxelabs.ie',
     'http://localhost:8788',
     'http://127.0.0.1:8788',
   ];
@@ -38,7 +40,6 @@ export async function onRequest(context) {
     );
   }
 
-  // Exchange API key for a short-lived token (valid 10 minutes)
   const tokenUrl = `https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`;
 
   try {
